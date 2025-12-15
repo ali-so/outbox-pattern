@@ -1,28 +1,47 @@
 package com.azki.order.model;
 
+import com.fasterxml.uuid.Generators;
+import com.fasterxml.uuid.impl.TimeBasedGenerator;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-@Data
+@Table(name = "OUTBOX_EVENTS")
+@Getter
+@Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class OutboxEvent extends BaseEntity {
 
     @Id
-    private UUID id;
+    private String id;
 
-    private String aggregateType;
-    private Long aggregateId;
-    private String eventType;
+    @Enumerated(EnumType.STRING)
+    private AggregateType aggregateType;
 
-    @Column(columnDefinition = "jsonb")
+    @Enumerated(EnumType.STRING)
+    private EventType eventType;
+
+    @Column(columnDefinition = "CLOB")
     private String payload;
 
     @Enumerated(EnumType.STRING)
-    private OutboxStatus status; // NEW, SENT, PENDING
+    private OutboxStatus status;
 
-    private LocalDateTime createdAt;
+    @Column(columnDefinition = "CLOB")
+    private String errorMessage;
+
+    private int retryCount = 0;
+
+    @PrePersist
+    public void generateId() {
+        if (id == null) {
+            TimeBasedGenerator generator = Generators.timeBasedGenerator();
+            this.id = generator.generate().toString() + "$$" + this.aggregateType + "$$" + this.eventType;
+        }
+    }
 }
 

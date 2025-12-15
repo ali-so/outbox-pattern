@@ -22,18 +22,42 @@ public class OutboxPublisher {
     @Transactional
     public void publish() {
 
-        List<OutboxEvent> events = outboxRepository.findTop100ByStatusOrderByCreatedAt(OutboxStatus.NEW);
+        // Process NEW events first
+        final var newEvents = outboxRepository.findTop100ByStatusOrderByCreatedAt(OutboxStatus.NEW);
+        processEvents(newEvents);
 
+        // Also retry FAILED events
+        final var failedEvents = outboxRepository.findTop100ByStatusOrderByCreatedAt(OutboxStatus.PENDING);
+        processEvents(failedEvents);
+    }
+
+    private void processEvents(List<OutboxEvent> events) {
         for (OutboxEvent e : events) {
+            if (e.getRetryCount() > 50) {
+                e.setStatus(OutboxStatus.FAILED);
+                outboxRepository.save(e);
+                return;
+            }
+
             try {
                 kafkaTemplate.send(
                         "order-events",
-                        e.getId().toString(),
+                        e.getId(),
                         e.getPayload()
                 ).get();
 
                 e.setStatus(OutboxStatus.SENT);
-            } catch (Exception ignored) {}
+                e.setErrorMessage(null); // Clear error message on success
+            } catch (Exception ex) {
+                // Save error message and set status to FAILED
+                e.setStatus(OutboxStatus.PENDING);
+                final var errorMsg = ex.getMessage() != null ? ex.getMessage() : ex.getClass().getSimpleName();
+                // Truncate error message if too long (CLOB can handle large text, but we'll limit for readability)
+                e.setErrorMessage(errorMsg.length() > 1000 ? errorMsg.substring(0, 1000) : errorMsg);
+            } finally {
+                e.setRetryCount(e.getRetryCount() + 1);
+                outboxRepository.save(e);
+            }
         }
     }
 }

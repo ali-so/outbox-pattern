@@ -29,7 +29,7 @@ public class OrderEventListener {
             @Header(KafkaHeaders.RECEIVED_KEY) String eventId,
             Acknowledgment ack) throws Exception {
 
-        UUID id = UUID.fromString(eventId);
+        UUID id = UUID.fromString(eventId.split("\\$\\$")[0]);//just UUID Part
 
         if (repository.existsById(id)) {
             ack.acknowledge();

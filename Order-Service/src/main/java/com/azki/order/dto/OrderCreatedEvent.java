@@ -1,12 +1,7 @@
 package com.azki.order.dto;
 
-import lombok.Data;
-
 import java.util.UUID;
 
-@Data
-public class OrderCreatedEvent {
-    public UUID orderId;
-    public String phoneNumber;
-    public String product;
-}
+public record OrderCreatedEvent (UUID orderId,
+                                 String phoneNumber,
+                                 String product) {}

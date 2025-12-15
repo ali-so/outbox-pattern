@@ -9,9 +9,9 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.azki</groupId>
-	<artifactId>notification</artifactId>
+	<artifactId>notification-management</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>notification</name>
+	<name>notification-management</name>
 	<description>Demo project for Outbox Pattern</description>
 	<url/>
 	<licenses>
@@ -27,7 +27,7 @@
 		<url/>
 	</scm>
 	<properties>
-		<java.version>25</java.version>
+		<java.version>21</java.version>
         <org.mapstruct.version>1.6.3</org.mapstruct.version>
 	</properties>
 	<dependencies>
@@ -48,11 +48,6 @@
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
 			<optional>true</optional>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-test</artifactId>
-			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.kafka</groupId>
